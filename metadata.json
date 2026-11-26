@@ -1,0 +1,8 @@
+{
+  "name": "Remix PenaGuruSMK",
+  "description": "Aplikasi administrasi guru digital berbasis Kurikulum Merdeka (SMK \u0026 Fase A-F) dengan absensi, jurnal mengajar, daftar nilai dan ekspor PDF/CSV, modul ajar/ATP, jadwal dan pengingat, serta Asisten AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,259 @@
+{
+  "entities": {
+    "TeacherProfile": {
+      "title": "TeacherProfile",
+      "description": "Profil guru pengguna PenaGuruSMK beserta preferensi jenjang dan semester aktif.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID pemilik profil" },
+        "displayName": { "type": "string", "description": "Nama lengkap guru" },
+        "schoolName": { "type": "string", "description": "Nama satuan pendidikan / SMK" },
+        "nip": { "type": "string", "description": "NIP atau NUPTK opsional" },
+        "defaultLevel": { "type": "string", "enum": ["SMK", "SMA", "SMP", "SD"] },
+        "defaultPhase": { "type": "string", "enum": ["A", "B", "C", "D", "E", "F"] },
+        "activeSemester": { "type": "string", "enum": ["Ganjil", "Genap"] },
+        "activeAcademicYear": { "type": "string", "description": "Tahun ajaran mis. 2026/2027" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "FieldValue.serverTimestamp()" }
+      },
+      "required": ["userId", "displayName", "schoolName", "defaultLevel", "defaultPhase", "activeSemester", "activeAcademicYear", "createdAt", "updatedAt"]
+    },
+    "ClassRoom": {
+      "title": "ClassRoom",
+      "description": "Kelas dan mata pelajaran binaan guru beserta fase dan ambang batas KKTP.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "educationLevel": { "type": "string", "enum": ["SMK", "SMA", "SMP", "SD"] },
+        "phase": { "type": "string", "enum": ["A", "B", "C", "D", "E", "F"] },
+        "gradeLevel": { "type": "string" },
+        "kktpThreshold": { "type": "number" },
+        "studentCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "className", "subjectName", "educationLevel", "phase", "gradeLevel", "kktpThreshold", "studentCount", "createdAt", "updatedAt"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Data siswa terdaftar dalam sebuah kelas.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "nis": { "type": "string" },
+        "gender": { "type": "string", "enum": ["L", "P"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "fullName", "nis", "gender", "createdAt", "updatedAt"]
+    },
+    "Absensi": {
+      "title": "Absensi",
+      "description": "Rekap kehadiran siswa per pertemuan dan kelas beserta catatan absensi.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "meetingNumber": { "type": "integer" },
+        "attendanceMap": { "type": "object" },
+        "presentCount": { "type": "integer" },
+        "sickCount": { "type": "integer" },
+        "permissionCount": { "type": "integer" },
+        "absentCount": { "type": "integer" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "className", "subjectName", "dateKey", "meetingNumber", "attendanceMap", "presentCount", "sickCount", "permissionCount", "absentCount", "createdAt", "updatedAt"]
+    },
+    "JurnalMengajar": {
+      "title": "JurnalMengajar",
+      "description": "Catatan jurnal mengajar guru per sesi pertemuan, materi, refleksi, dan tindak lanjut.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "meetingNumber": { "type": "integer" },
+        "learningObjective": { "type": "string" },
+        "topic": { "type": "string" },
+        "method": { "type": "string" },
+        "obstacles": { "type": "string" },
+        "reflection": { "type": "string" },
+        "journalStatus": { "type": "string", "enum": ["draft", "completed", "follow_up"] },
+        "followUpPlan": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "className", "subjectName", "dateKey", "meetingNumber", "learningObjective", "topic", "method", "obstacles", "reflection", "journalStatus", "createdAt", "updatedAt"]
+    },
+    "TeachingJournal": {
+      "title": "TeachingJournal",
+      "description": "Sesi absensi siswa dan jurnal mengajar per pertemuan.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "meetingNumber": { "type": "integer" },
+        "learningObjective": { "type": "string" },
+        "topic": { "type": "string" },
+        "method": { "type": "string" },
+        "obstacles": { "type": "string" },
+        "reflection": { "type": "string" },
+        "journalStatus": { "type": "string", "enum": ["draft", "completed", "follow_up"] },
+        "attendanceSaved": { "type": "boolean" },
+        "attendanceMap": { "type": "object" },
+        "presentCount": { "type": "integer" },
+        "absentCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "className", "subjectName", "dateKey", "meetingNumber", "learningObjective", "topic", "method", "obstacles", "reflection", "journalStatus", "attendanceSaved", "attendanceMap", "presentCount", "absentCount", "createdAt", "updatedAt"]
+    },
+    "Assessment": {
+      "title": "Assessment",
+      "description": "Komponen penilaian formatif atau sumatif dan peta skor siswa.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["formatif", "sumatif"] },
+        "learningObjective": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "maxScore": { "type": "number" },
+        "weight": { "type": "number" },
+        "scoresMap": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "title", "category", "learningObjective", "dateKey", "maxScore", "weight", "scoresMap", "createdAt", "updatedAt"]
+    },
+    "NilaiSiswa": {
+      "title": "NilaiSiswa",
+      "description": "Rekam nilai asesmen siswa per mata pelajaran, semester, kategori formatif/sumatif, dan tujuan pembelajaran.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentNis": { "type": "string" },
+        "assessmentTitle": { "type": "string" },
+        "category": { "type": "string", "enum": ["formatif", "sumatif"] },
+        "learningObjective": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "score": { "type": "number" },
+        "maxScore": { "type": "number" },
+        "weight": { "type": "number" },
+        "semester": { "type": "string", "enum": ["Ganjil", "Genap"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "className", "subjectName", "studentId", "studentName", "studentNis", "assessmentTitle", "category", "learningObjective", "dateKey", "score", "maxScore", "weight", "semester", "createdAt", "updatedAt"]
+    },
+    "LessonModule": {
+      "title": "LessonModule",
+      "description": "Dokumen Modul Ajar, ATP, atau Bank Soal tersimpan (manual maupun AI).",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "moduleType": { "type": "string", "enum": ["modul_ajar", "atp", "bank_soal"] },
+        "title": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "educationLevel": { "type": "string", "enum": ["SMK", "SMA", "SMP", "SD"] },
+        "phase": { "type": "string", "enum": ["A", "B", "C", "D", "E", "F"] },
+        "gradeLevel": { "type": "string" },
+        "durationMinutes": { "type": "integer" },
+        "learningOutcomes": { "type": "string" },
+        "learningObjectives": { "type": "string" },
+        "pancasilaProfile": { "type": "array" },
+        "activitiesSummary": { "type": "string" },
+        "assessmentPlan": { "type": "string" },
+        "aiGenerated": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "moduleType", "title", "subjectName", "educationLevel", "phase", "gradeLevel", "durationMinutes", "learningOutcomes", "learningObjectives", "pancasilaProfile", "activitiesSummary", "assessmentPlan", "aiGenerated", "createdAt", "updatedAt"]
+    },
+    "ScheduleSlot": {
+      "title": "ScheduleSlot",
+      "description": "Slot jadwal mengajar mingguan, konfigurasi pengingat, dan metadata sinkronisasi Google Calendar.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "dayOfWeek": { "type": "integer" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "room": { "type": "string" },
+        "reminderEnabled": { "type": "boolean" },
+        "calendarEventId": { "type": "string" },
+        "calendarSyncedAtEpochMs": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "classId", "className", "subjectName", "dayOfWeek", "startTime", "endTime", "room", "reminderEnabled", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/TeacherProfile" },
+      "description": "Profil guru terisolasi per UID"
+    },
+    "/users/{userId}/classes/{classId}": {
+      "schema": { "$ref": "#/entities/ClassRoom" },
+      "description": "Daftar kelas dan mata pelajaran milik guru"
+    },
+    "/users/{userId}/classes/{classId}/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Daftar siswa di dalam kelas tertentu"
+    },
+    "/users/{userId}/absensi/{absensiId}": {
+      "schema": { "$ref": "#/entities/Absensi" },
+      "description": "Rekap absensi siswa per sesi pertemuan"
+    },
+    "/users/{userId}/jurnal_mengajar/{jurnalId}": {
+      "schema": { "$ref": "#/entities/JurnalMengajar" },
+      "description": "Catatan jurnal mengajar guru per pertemuan"
+    },
+    "/users/{userId}/journals/{journalId}": {
+      "schema": { "$ref": "#/entities/TeachingJournal" },
+      "description": "Catatan absensi dan jurnal mengajar per sesi"
+    },
+    "/users/{userId}/assessments/{assessmentId}": {
+      "schema": { "$ref": "#/entities/Assessment" },
+      "description": "Daftar asesmen formatif/sumatif dan skor siswa"
+    },
+    "/users/{userId}/nilai_siswa/{nilaiId}": {
+      "schema": { "$ref": "#/entities/NilaiSiswa" },
+      "description": "Catatan nilai asesmen siswa per mata pelajaran"
+    },
+    "/users/{userId}/lesson_modules/{moduleId}": {
+      "schema": { "$ref": "#/entities/LessonModule" },
+      "description": "Pustaka Modul Ajar, ATP, dan Bank Soal"
+    },
+    "/users/{userId}/schedules/{scheduleId}": {
+      "schema": { "$ref": "#/entities/ScheduleSlot" },
+      "description": "Jadwal pelajaran mingguan guru"
+    }
+  }
+}

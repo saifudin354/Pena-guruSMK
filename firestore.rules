@@ -1,0 +1,398 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidEduLevel(level) {
+      return level in ['SMK', 'SMA', 'SMP', 'SD'];
+    }
+
+    function isValidPhase(phase) {
+      return phase in ['A', 'B', 'C', 'D', 'E', 'F'];
+    }
+
+    function isValidTeacherProfile(data, userId) {
+      return data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.schoolName is string && data.schoolName.size() <= 120 &&
+             (!('nip' in data) || (data.nip is string && data.nip.size() <= 30)) &&
+             isValidEduLevel(data.defaultLevel) &&
+             isValidPhase(data.defaultPhase) &&
+             data.activeSemester in ['Ganjil', 'Genap'] &&
+             data.activeAcademicYear is string && data.activeAcademicYear.size() >= 4 && data.activeAcademicYear.size() <= 20 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidClassRoom(data, userId) {
+      return data.userId == userId &&
+             data.className is string && data.className.size() >= 1 && data.className.size() <= 60 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             isValidEduLevel(data.educationLevel) &&
+             isValidPhase(data.phase) &&
+             data.gradeLevel is string && data.gradeLevel.size() >= 1 && data.gradeLevel.size() <= 20 &&
+             data.kktpThreshold is number && data.kktpThreshold >= 0 && data.kktpThreshold <= 100 &&
+             data.studentCount is int && data.studentCount >= 0 && data.studentCount <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidStudent(data, userId, classId) {
+      return data.userId == userId &&
+             data.classId == classId &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100 &&
+             data.nis is string && data.nis.size() <= 30 &&
+             data.gender in ['L', 'P'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 300)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAbsensi(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.classId) &&
+             data.className is string && data.className.size() >= 1 && data.className.size() <= 60 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 12 &&
+             data.meetingNumber is int && data.meetingNumber >= 1 && data.meetingNumber <= 200 &&
+             data.attendanceMap is map && data.attendanceMap.size() <= 100 &&
+             data.presentCount is int && data.presentCount >= 0 && data.presentCount <= 100 &&
+             data.sickCount is int && data.sickCount >= 0 && data.sickCount <= 100 &&
+             data.permissionCount is int && data.permissionCount >= 0 && data.permissionCount <= 100 &&
+             data.absentCount is int && data.absentCount >= 0 && data.absentCount <= 100 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidJurnalMengajar(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.classId) &&
+             data.className is string && data.className.size() >= 1 && data.className.size() <= 60 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 12 &&
+             data.meetingNumber is int && data.meetingNumber >= 1 && data.meetingNumber <= 200 &&
+             data.learningObjective is string && data.learningObjective.size() <= 500 &&
+             data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 200 &&
+             data.method is string && data.method.size() <= 100 &&
+             data.obstacles is string && data.obstacles.size() <= 500 &&
+             data.reflection is string && data.reflection.size() <= 500 &&
+             data.journalStatus in ['draft', 'completed', 'follow_up'] &&
+             (!('followUpPlan' in data) || (data.followUpPlan is string && data.followUpPlan.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTeachingJournal(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.classId) &&
+             data.className is string && data.className.size() >= 1 && data.className.size() <= 60 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 12 &&
+             data.meetingNumber is int && data.meetingNumber >= 1 && data.meetingNumber <= 200 &&
+             data.learningObjective is string && data.learningObjective.size() <= 500 &&
+             data.topic is string && data.topic.size() <= 200 &&
+             data.method is string && data.method.size() <= 100 &&
+             data.obstacles is string && data.obstacles.size() <= 500 &&
+             data.reflection is string && data.reflection.size() <= 500 &&
+             data.journalStatus in ['draft', 'completed', 'follow_up'] &&
+             data.attendanceSaved is bool &&
+             data.attendanceMap is map && data.attendanceMap.size() <= 100 &&
+             data.presentCount is int && data.presentCount >= 0 && data.presentCount <= 100 &&
+             data.absentCount is int && data.absentCount >= 0 && data.absentCount <= 100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAssessment(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.classId) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.category in ['formatif', 'sumatif'] &&
+             data.learningObjective is string && data.learningObjective.size() <= 300 &&
+             data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 12 &&
+             data.maxScore is number && data.maxScore > 0 && data.maxScore <= 1000 &&
+             data.weight is number && data.weight > 0 && data.weight <= 100 &&
+             data.scoresMap is map && data.scoresMap.size() <= 100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidNilaiSiswa(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.classId) &&
+             data.className is string && data.className.size() >= 1 && data.className.size() <= 60 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             isValidId(data.studentId) &&
+             data.studentName is string && data.studentName.size() >= 1 && data.studentName.size() <= 100 &&
+             data.studentNis is string && data.studentNis.size() <= 30 &&
+             data.assessmentTitle is string && data.assessmentTitle.size() >= 1 && data.assessmentTitle.size() <= 120 &&
+             data.category in ['formatif', 'sumatif'] &&
+             data.learningObjective is string && data.learningObjective.size() <= 300 &&
+             data.dateKey is string && data.dateKey.size() >= 8 && data.dateKey.size() <= 12 &&
+             data.maxScore is number && data.maxScore > 0 && data.maxScore <= 1000 &&
+             data.score is number && data.score >= 0 && data.score <= data.maxScore &&
+             data.weight is number && data.weight > 0 && data.weight <= 100 &&
+             data.semester in ['Ganjil', 'Genap'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 300)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLessonModule(data, userId) {
+      return data.userId == userId &&
+             data.moduleType in ['modul_ajar', 'atp', 'bank_soal'] &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             isValidEduLevel(data.educationLevel) &&
+             isValidPhase(data.phase) &&
+             data.gradeLevel is string && data.gradeLevel.size() >= 1 && data.gradeLevel.size() <= 20 &&
+             data.durationMinutes is int && data.durationMinutes >= 0 && data.durationMinutes <= 600 &&
+             data.learningOutcomes is string && data.learningOutcomes.size() <= 3000 &&
+             data.learningObjectives is string && data.learningObjectives.size() <= 3000 &&
+             data.pancasilaProfile is list && data.pancasilaProfile.size() <= 8 &&
+             (data.pancasilaProfile.size() == 0 || data.pancasilaProfile[0] is string) &&
+             data.activitiesSummary is string && data.activitiesSummary.size() <= 12000 &&
+             data.assessmentPlan is string && data.assessmentPlan.size() <= 8000 &&
+             data.aiGenerated is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidScheduleSlot(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.classId) &&
+             data.className is string && data.className.size() >= 1 && data.className.size() <= 60 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             data.dayOfWeek is int && data.dayOfWeek >= 1 && data.dayOfWeek <= 6 &&
+             data.startTime is string && data.startTime.size() >= 4 && data.startTime.size() <= 8 &&
+             data.endTime is string && data.endTime.size() >= 4 && data.endTime.size() <= 8 &&
+             data.room is string && data.room.size() <= 60 &&
+             data.reminderEnabled is bool &&
+             (!('calendarEventId' in data) || (data.calendarEventId is string && data.calendarEventId.size() <= 256)) &&
+             (!('calendarSyncedAtEpochMs' in data) || (data.calendarSyncedAtEpochMs is int && data.calendarSyncedAtEpochMs >= 0)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'schoolName', 'defaultLevel', 'defaultPhase', 'activeSemester', 'activeAcademicYear', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'schoolName', 'nip', 'defaultLevel', 'defaultPhase', 'activeSemester', 'activeAcademicYear', 'createdAt', 'updatedAt']) &&
+                       isValidTeacherProfile(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTeacherProfile(incoming(), userId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'schoolName', 'nip', 'defaultLevel', 'defaultPhase', 'activeSemester', 'activeAcademicYear', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /classes/{classId} {
+        allow get: if isOwner(userId) && isValidId(classId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(classId) &&
+                         incoming().keys().hasAll(['userId', 'className', 'subjectName', 'educationLevel', 'phase', 'gradeLevel', 'kktpThreshold', 'studentCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'className', 'subjectName', 'educationLevel', 'phase', 'gradeLevel', 'kktpThreshold', 'studentCount', 'createdAt', 'updatedAt']) &&
+                         isValidClassRoom(incoming(), userId);
+        allow update: if isOwner(userId) &&
+                         isValidId(classId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidClassRoom(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['className', 'subjectName', 'educationLevel', 'phase', 'gradeLevel', 'kktpThreshold', 'studentCount', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(classId);
+
+        match /students/{studentId} {
+          allow get: if isOwner(userId) && isValidId(classId) && isValidId(studentId);
+          allow list: if isOwner(userId) && isValidId(classId);
+          allow create: if isOwner(userId) &&
+                           isValidId(classId) &&
+                           isValidId(studentId) &&
+                           incoming().keys().hasAll(['userId', 'classId', 'fullName', 'nis', 'gender', 'createdAt', 'updatedAt']) &&
+                           incoming().keys().hasOnly(['userId', 'classId', 'fullName', 'nis', 'gender', 'notes', 'createdAt', 'updatedAt']) &&
+                           isValidStudent(incoming(), userId, classId) &&
+                           exists(/databases/$(database)/documents/users/$(userId)/classes/$(classId));
+          allow update: if isOwner(userId) &&
+                           isValidId(classId) &&
+                           isValidId(studentId) &&
+                           incoming().userId == existing().userId &&
+                           incoming().classId == existing().classId &&
+                           incoming().createdAt == existing().createdAt &&
+                           isValidStudent(incoming(), userId, classId) &&
+                           incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'nis', 'gender', 'notes', 'updatedAt']);
+          allow delete: if isOwner(userId) && isValidId(classId) && isValidId(studentId);
+        }
+      }
+
+      match /absensi/{absensiId} {
+        allow get: if isOwner(userId) && isValidId(absensiId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(absensiId) &&
+                         incoming().keys().hasAll(['userId', 'classId', 'className', 'subjectName', 'dateKey', 'meetingNumber', 'attendanceMap', 'presentCount', 'sickCount', 'permissionCount', 'absentCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'classId', 'className', 'subjectName', 'dateKey', 'meetingNumber', 'attendanceMap', 'presentCount', 'sickCount', 'permissionCount', 'absentCount', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidAbsensi(incoming(), userId) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId));
+        allow update: if isOwner(userId) &&
+                         isValidId(absensiId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().classId == existing().classId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidAbsensi(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['dateKey', 'meetingNumber', 'attendanceMap', 'presentCount', 'sickCount', 'permissionCount', 'absentCount', 'notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(absensiId);
+      }
+
+      match /jurnal_mengajar/{jurnalId} {
+        allow get: if isOwner(userId) && isValidId(jurnalId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(jurnalId) &&
+                         incoming().keys().hasAll(['userId', 'classId', 'className', 'subjectName', 'dateKey', 'meetingNumber', 'learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'classId', 'className', 'subjectName', 'dateKey', 'meetingNumber', 'learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'followUpPlan', 'createdAt', 'updatedAt']) &&
+                         isValidJurnalMengajar(incoming(), userId) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId));
+        allow update: if isOwner(userId) &&
+                         isValidId(jurnalId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().classId == existing().classId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidJurnalMengajar(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['dateKey', 'meetingNumber', 'learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'followUpPlan', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(jurnalId);
+      }
+
+      match /journals/{journalId} {
+        allow get: if isOwner(userId) && isValidId(journalId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(journalId) &&
+                         incoming().keys().hasAll(['userId', 'classId', 'className', 'subjectName', 'dateKey', 'meetingNumber', 'learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'attendanceSaved', 'attendanceMap', 'presentCount', 'absentCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'classId', 'className', 'subjectName', 'dateKey', 'meetingNumber', 'learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'attendanceSaved', 'attendanceMap', 'presentCount', 'absentCount', 'createdAt', 'updatedAt']) &&
+                         isValidTeachingJournal(incoming(), userId) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId));
+        allow update: if isOwner(userId) &&
+                         isValidId(journalId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().classId == existing().classId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTeachingJournal(incoming(), userId) && (
+                           incoming().diff(existing()).affectedKeys().hasOnly(['attendanceMap', 'presentCount', 'absentCount', 'attendanceSaved', 'updatedAt']) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly(['learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'updatedAt']) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly(['learningObjective', 'topic', 'method', 'obstacles', 'reflection', 'journalStatus', 'attendanceMap', 'presentCount', 'absentCount', 'attendanceSaved', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(journalId);
+      }
+
+      match /assessments/{assessmentId} {
+        allow get: if isOwner(userId) && isValidId(assessmentId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(assessmentId) &&
+                         incoming().keys().hasAll(['userId', 'classId', 'title', 'category', 'learningObjective', 'dateKey', 'maxScore', 'weight', 'scoresMap', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'classId', 'title', 'category', 'learningObjective', 'dateKey', 'maxScore', 'weight', 'scoresMap', 'createdAt', 'updatedAt']) &&
+                         isValidAssessment(incoming(), userId) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId));
+        allow update: if isOwner(userId) &&
+                         isValidId(assessmentId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().classId == existing().classId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidAssessment(incoming(), userId) && (
+                           incoming().diff(existing()).affectedKeys().hasOnly(['scoresMap', 'updatedAt']) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'learningObjective', 'dateKey', 'maxScore', 'weight', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(assessmentId);
+      }
+
+      match /nilai_siswa/{nilaiId} {
+        allow get: if isOwner(userId) && isValidId(nilaiId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(nilaiId) &&
+                         incoming().keys().hasAll(['userId', 'classId', 'className', 'subjectName', 'studentId', 'studentName', 'studentNis', 'assessmentTitle', 'category', 'learningObjective', 'dateKey', 'score', 'maxScore', 'weight', 'semester', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'classId', 'className', 'subjectName', 'studentId', 'studentName', 'studentNis', 'assessmentTitle', 'category', 'learningObjective', 'dateKey', 'score', 'maxScore', 'weight', 'semester', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidNilaiSiswa(incoming(), userId) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId)) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId)/students/$(incoming().studentId));
+        allow update: if isOwner(userId) &&
+                         isValidId(nilaiId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().classId == existing().classId &&
+                         incoming().studentId == existing().studentId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidNilaiSiswa(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['className', 'subjectName', 'studentName', 'studentNis', 'assessmentTitle', 'category', 'learningObjective', 'dateKey', 'score', 'maxScore', 'weight', 'semester', 'notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(nilaiId);
+      }
+
+      match /lesson_modules/{moduleId} {
+        allow get: if isOwner(userId) && isValidId(moduleId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(moduleId) &&
+                         incoming().keys().hasAll(['userId', 'moduleType', 'title', 'subjectName', 'educationLevel', 'phase', 'gradeLevel', 'durationMinutes', 'learningOutcomes', 'learningObjectives', 'pancasilaProfile', 'activitiesSummary', 'assessmentPlan', 'aiGenerated', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'moduleType', 'title', 'subjectName', 'educationLevel', 'phase', 'gradeLevel', 'durationMinutes', 'learningOutcomes', 'learningObjectives', 'pancasilaProfile', 'activitiesSummary', 'assessmentPlan', 'aiGenerated', 'createdAt', 'updatedAt']) &&
+                         isValidLessonModule(incoming(), userId);
+        allow update: if isOwner(userId) &&
+                         isValidId(moduleId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().aiGenerated == existing().aiGenerated &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidLessonModule(incoming(), userId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['moduleType', 'title', 'subjectName', 'educationLevel', 'phase', 'gradeLevel', 'durationMinutes', 'learningOutcomes', 'learningObjectives', 'pancasilaProfile', 'activitiesSummary', 'assessmentPlan', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(moduleId);
+      }
+
+      match /schedules/{scheduleId} {
+        allow get: if isOwner(userId) && isValidId(scheduleId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(scheduleId) &&
+                         incoming().keys().hasAll(['userId', 'classId', 'className', 'subjectName', 'dayOfWeek', 'startTime', 'endTime', 'room', 'reminderEnabled', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'classId', 'className', 'subjectName', 'dayOfWeek', 'startTime', 'endTime', 'room', 'reminderEnabled', 'calendarEventId', 'calendarSyncedAtEpochMs', 'createdAt', 'updatedAt']) &&
+                         isValidScheduleSlot(incoming(), userId) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/classes/$(incoming().classId));
+        allow update: if isOwner(userId) &&
+                         isValidId(scheduleId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidScheduleSlot(incoming(), userId) && (
+                           incoming().diff(existing()).affectedKeys().hasOnly(['reminderEnabled', 'updatedAt']) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly(['calendarEventId', 'calendarSyncedAtEpochMs', 'updatedAt']) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly(['startTime', 'endTime', 'room', 'calendarEventId', 'calendarSyncedAtEpochMs', 'updatedAt']) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly(['classId', 'className', 'subjectName', 'dayOfWeek', 'startTime', 'endTime', 'room', 'reminderEnabled', 'calendarEventId', 'calendarSyncedAtEpochMs', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(scheduleId);
+      }
+    }
+  }
+}
